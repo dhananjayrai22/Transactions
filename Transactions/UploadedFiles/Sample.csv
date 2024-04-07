@@ -1,0 +1,5 @@
+Id,Amount,CurrencyCode,TransactionDate,Status
+Invoice0000001,100000,USD,20-02-2019 12:33,Approved
+Invoice0000002,30000,USD,20-02-2019 12:33,Failed
+,,,,
+,,,,

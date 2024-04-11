@@ -18,14 +18,15 @@ namespace Transactions.Controllers
 
         public UploadController()
         {
-            _context = new AssignmentDbEntities(); // Initialize _context
+            _context = new AssignmentDbEntities();
         }
 
-        
+
 
         [HttpGet]
         public ActionResult UploadFile()
-        {
+        { 
+
             return View();
         }
         //[HttpPost]
@@ -62,7 +63,7 @@ namespace Transactions.Controllers
                 return View("Invalid file format. Please upload a CSV or XML file.");
             }
 
-            if (file.ContentLength > 1 * 1024 * 1024) // 1 MB
+            if (file.ContentLength > 1 * 1024 * 1024)
             {
                 return View("File size exceeds the maximum limit of 1 MB.");
             }
@@ -71,84 +72,101 @@ namespace Transactions.Controllers
             {
                 if (file.ContentType == "text/csv")
                 {
-                    
-                    using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+                    try
                     {
-                        var records = csv.GetRecords<Transaction>();
-                        foreach (var record in records)
+                        using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
                         {
-                            
-                            if (string.IsNullOrEmpty(record.Id) ||
-                                record.Amount == 0 ||
-                                string.IsNullOrEmpty(record.CurrencyCode) ||
-                                record.TransactionDate == default(DateTime) ||
-                                string.IsNullOrEmpty(record.Status))
+
+                            var records = csv.GetRecords<Transaction>();
+                            foreach (var record in records)
                             {
-                                return View("Invalid record format.");
-                            }
 
-                            var transaction = new Transaction
-                            {
-                                Id = record.Id,
-                                Amount = record.Amount,
-                                CurrencyCode = record.CurrencyCode,
-                                TransactionDate = record.TransactionDate,
-                                Status = record.Status
-                            };
-
-                            _context.Transactions.Add(transaction);
-                        }
-
-                        _context.SaveChanges();
-                    }
-                }
-                
-                    
-                    else if (file.ContentType == "text/xml")
-                    {
-                        
-                        try
-                        {
-                            XDocument xmlDoc = XDocument.Load(reader);
-
-                           
-                            foreach (var element in xmlDoc.Descendants("Transaction"))
-                            {
-                                var transaction = new Transaction
-                                {
-                                    Id = element.Element("Id")?.Value,
-                                    Amount = Convert.ToDecimal(element.Element("Amount")?.Value),
-                                    CurrencyCode = element.Element("CurrencyCode")?.Value,
-                                    TransactionDate = Convert.ToDateTime(element.Element("TransactionDate")?.Value),
-                                    Status = element.Element("Status")?.Value
-                                };
-
-                                
-                                if (string.IsNullOrEmpty(transaction.Id) ||
-                                    transaction.Amount == 0 ||
-                                    string.IsNullOrEmpty(transaction.CurrencyCode) ||
-                                    transaction.TransactionDate == default(DateTime) ||
-                                    string.IsNullOrEmpty(transaction.Status))
+                                if (string.IsNullOrEmpty(record.Id) ||
+                                    record.Amount == 0 ||
+                                    string.IsNullOrEmpty(record.CurrencyCode) ||
+                                    record.TransactionDate == default(DateTime) ||
+                                    string.IsNullOrEmpty(record.Status))
                                 {
                                     return View("Invalid record format.");
                                 }
 
+                                var transaction = new Transaction
+                                {
+                                    Id = record.Id,
+                                    Amount = record.Amount,
+                                    CurrencyCode = record.CurrencyCode,
+                                    TransactionDate = record.TransactionDate,
+                                    Status = record.Status
+                                };
                                 _context.Transactions.Add(transaction);
                             }
 
                             _context.SaveChanges();
                         }
-                        catch (Exception ex)
-                        {
-                            return View("Error processing XML file: " + ex.Message);
-                        }
+                    }
+
+
+
+
+
+                    catch (Exception ex)
+                    {
+
+                        throw ex;
                     }
                 }
+            
+
+
+
+
+
+
+                else if (file.ContentType == "text/xml")
+            {
+
+                try
+                {
+                    XDocument xmlDoc = XDocument.Load(reader);
+
+
+                    foreach (var element in xmlDoc.Descendants("Transaction"))
+                    {
+                        var transaction = new Transaction
+                        {
+                            Id = element.Element("Id")?.Value,
+                            Amount = Convert.ToDecimal(element.Element("Amount")?.Value),
+                            CurrencyCode = element.Element("CurrencyCode")?.Value,
+                            TransactionDate = Convert.ToDateTime(element.Element("TransactionDate")?.Value),
+                            Status = element.Element("Status")?.Value
+                        };
+
+
+                        if (string.IsNullOrEmpty(transaction.Id) ||
+                            transaction.Amount == 0 ||
+                            string.IsNullOrEmpty(transaction.CurrencyCode) ||
+                            transaction.TransactionDate == default(DateTime) ||
+                            string.IsNullOrEmpty(transaction.Status))
+                        {
+                            return View("Invalid record format.");
+                        }
+
+                        _context.Transactions.Add(transaction);
+                    }
+
+                    _context.SaveChanges();
+                }
+                catch (Exception ex)
+                {
+                    return View("Error processing XML file: " + ex.Message);
+                }
+            }
+        }
             
             
 
             return View();
-        }
-
     }
+
+}
 }
